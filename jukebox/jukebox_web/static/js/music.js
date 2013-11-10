@@ -332,6 +332,57 @@ Music = {
             return false;
         });
 
+
+        $("#main table.list img.default_add").live("click", function() {
+            $.ajax({
+                url: "/api/v1/defaultfavourites",
+                type: "POST",
+                data: {
+                    "id": $(this).attr("data-id")
+                },
+                success: function(data) {
+                    var item = $("img.default_add[data-id=" + data.id + "]");
+                    item.attr("src", "/static/img/default_active.png");
+                    item.removeClass("default_add");
+                    item.addClass("default_remove");
+                    item.attr("alt", gettext("Remove from default playlist"));
+                    item.attr("title", gettext("Remove from default playlist"));
+                }
+            });
+            return false;
+        });
+
+        $("#main table.list img.default_remove").live("click", function() {
+            var success = null;
+            if ($(this).closest("tr.row_defaults").length == 0) {
+                success = function(data) {
+                    var item = $("img.default_remove[data-id=" + data.id + "]");
+                    item.attr("src", "/static/img/default.png");
+                    item.removeClass("default_remove");
+                    item.addClass("default_add");
+                    item.attr("alt", gettext("Add to default playlist"));
+                    item.attr("title", gettext("Add to default playlist"));
+                };
+            }
+            else {
+                success = function(data) {
+                    var item = $("img.default_remove[data-id=" + data.id + "]");
+                    item.closest("tr").fadeOut(1000, function() {
+                        item.closest("tr").remove();
+                    });
+                };
+            }
+
+            $.ajax({
+                url: "/api/v1/defaultfavourites/" + $(this).attr("data-id"),
+                type: "DELETE",
+                success: function(data) {
+                    success(data);
+                }
+            });
+            return false;
+        });
+
         $("td.voteCount").live({
             mouseenter: function() {
                 var element = $(this);
@@ -637,6 +688,7 @@ Music = {
 
     renderData: function(data) {
         var html = "";
+		var showDefaultPlaylist = data.CanManageDefault;
         $.each(data.itemList, function(index, item) {
             switch (data.type) {
                 case "queue":
@@ -821,6 +873,14 @@ Music = {
                     else {
                         html+= "<img src=\"/static/img/favourite.png\" class=\"favourite_add\" data-id=\"" + item.id + "\" alt=\"" + gettext("Add to favourites") + "\" title=\"" + gettext("Add to favourites") + "\" />";
                     }
+					if(showDefaultPlaylist){
+                    if (item.default) {
+                        html+= "<img src=\"/static/img/default_active.png\" class=\"default_remove\" data-id=\"" + item.id + "\" alt=\"" + gettext("Remove from default playlist") + "\" title=\"" + gettext("Remove from default playlist") + "\" />";
+                    }
+                    else {
+                        html+= "<img src=\"/static/img/default.png\" class=\"default_add\" data-id=\"" + item.id + "\" alt=\"" + gettext("Add to default playlist") + "\" title=\"" + gettext("Add to default playlist") + "\" />";
+                    }
+					}
                     html+= "</td>";
                     // html+= "<td>" + ((item.title != null) ?  : "")  + "<span class=\"value invisible\">" + item.id + "</span></td>";
 

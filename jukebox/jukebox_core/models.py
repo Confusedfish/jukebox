@@ -66,6 +66,27 @@ class Favourite(models.Model):
     User = models.ForeignKey(User)
     Created = models.DateTimeField(auto_now_add=True)
 
+	
+class DefaultPlaylist(models.Model):
+    class Meta:
+        ordering = ['Name']
+
+    def __unicode__(self):
+        return "%s" % self.Name
+
+    Name = models.CharField(max_length=200)
+	
+
+	
+class DefaultPlaylistFavourite(models.Model):
+    class Meta:
+        unique_together = ("Song", "DefaultPlaylist")
+        ordering = ['-Created']
+
+    Song = models.ForeignKey(Song)
+    DefaultPlaylist = models.ForeignKey(DefaultPlaylist)
+    Created = models.DateTimeField(auto_now_add=True)
+
 
 class History(models.Model):
     class Meta:

@@ -9,6 +9,11 @@ from rest_framework.permissions import IsAuthenticated
 import api, base64
 import forms
 
+# import the logging library
+import logging
+
+# Get an instance of a logger
+logger = logging.getLogger(__name__)
 
 class JukeboxAPIView(APIView):
     def api_set_user_id(self, request, api):
@@ -78,6 +83,9 @@ class songs(JukeboxAPIView):
                 page = form.cleaned_data["page"]
 
         result = songs_api.index(page)
+        if request.user.is_authenticated():
+            if request.user.groups.filter(name="Default Playlist Managers").exists():
+                result["CanManageDefault"] = True
         result["form"] = form.cleaned_data
         return Response(
             data=result
@@ -88,6 +96,7 @@ class songs_current(JukeboxAPIView):
     permissions = (IsAuthenticated, )
 
     def get(self, request):
+        logger.info('Test')
         request.session.modified = True
 
         history = api.history()
@@ -101,6 +110,25 @@ class songs_current(JukeboxAPIView):
             data=current
         )
 
+class songs_next(JukeboxAPIView):
+    permissions = (IsAuthenticated, )
+
+    def get(self, request):
+        request.session.modified = True
+
+        songs = api.songs()
+        current = {"Testing":True}
+        try:
+            print "Getting next song"
+            current = songs.getNextSong()
+        except Exception, e:
+            print e
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        return Response(
+            data=current.Filename
+        )
+
 
 class songs_skip(JukeboxAPIView):
     permissions = (IsAuthenticated, )
@@ -110,7 +138,12 @@ class songs_skip(JukeboxAPIView):
 
         songs_api = api.songs()
         songs_api.skipCurrentSong()
-        return Response("")
+
+        history = api.history()
+        current = {}
+        current = history.getCurrent()
+
+        return Response(data=current)
 
 class artists(JukeboxAPIView):
     permissions = (IsAuthenticated, )
@@ -501,11 +534,59 @@ class favourites_item(JukeboxAPIView):
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+class defaultfavourites(JukeboxAPIView):
+    permissions = (IsAuthenticated, )
+    form = forms.IdForm
+
+    def post(self, request):
+        request.session.modified = True
+
+        favourites_api = api.defaultfavourites()
+
+        try:
+            song_id = favourites_api.add(self.request.POST["id"])
+            return Response(
+                status=status.HTTP_201_CREATED,
+                data={
+                    'id': int(self.request.POST['id']),
+                },
+                headers={"Location": reverse(
+                    "jukebox_api_favourites_item",
+                    kwargs={"song_id": song_id}
+                )}
+            )
+        except ObjectDoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        except Exception, e:
+            print e
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class defaultfavourites_item(JukeboxAPIView):
+    permissions = (IsAuthenticated, )
+    form = forms.IdForm
+    def delete(self, request, song_id):
+        request.session.modified = True
+
+        favourites_api = api.defaultfavourites()
+
+        try:
+            return Response(
+                data=favourites_api.remove(song_id)
+            )
+        except ObjectDoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        except Exception, e:
+            print e
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+			
 class ping(JukeboxAPIView):
     def get(self, request):
         request.session.modified = True
         return Response(
             data= {
-                "ping": True
+                "ping": False
             }
         )
+

@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 
-from models import Artist, Genre, Album, Song, Queue, History, Favourite
+from models import Artist, Genre, Album, Song, Queue, History, Favourite, DefaultPlaylist, DefaultPlaylistFavourite
 from django.contrib import admin
 
 
@@ -8,6 +8,9 @@ class ArtistAdmin(admin.ModelAdmin):
     list_display = ('Name', )
     search_fields = ['Name']
 
+class DefaultPlaylistAdmin(admin.ModelAdmin):
+    list_display = ('Name', )
+    search_fields = ['Name']
 
 class GenreAdmin(admin.ModelAdmin):
     list_display = ('Name', )
@@ -35,6 +38,10 @@ class FavouriteAdmin(admin.ModelAdmin):
     list_display = ('Song', 'User', 'Created', )
     search_fields = ['User__username']
 
+class DefaultPlaylistFavouriteAdmin(admin.ModelAdmin):
+    list_display = ('Song', 'DefaultPlaylist', 'Created', )
+    search_fields = ['DefaultPlaylist__Name']
+
 
 admin.site.register(Artist, ArtistAdmin)
 admin.site.register(Genre, GenreAdmin)
@@ -43,3 +50,5 @@ admin.site.register(Song, SongAdmin)
 admin.site.register(Queue, QueueAdmin)
 admin.site.register(History, HistoryAdmin)
 admin.site.register(Favourite, FavouriteAdmin)
+admin.site.register(DefaultPlaylist, DefaultPlaylistAdmin)
+admin.site.register(DefaultPlaylistFavourite, DefaultPlaylistFavouriteAdmin)

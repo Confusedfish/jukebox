@@ -9,7 +9,13 @@ import os, re, time
 from datetime import datetime
 from signal import SIGABRT
 from django.contrib.auth.models import User
-from models import Song, Artist, Album, Genre, Queue, Favourite, History, Player
+from models import Song, Artist, Album, Genre, Queue, Favourite, History, Player, DefaultPlaylist, DefaultPlaylistFavourite
+
+# import the logging library
+import logging
+
+# Get an instance of a logger
+logger = logging.getLogger(__name__)
 
 
 class api_base:
@@ -193,6 +199,11 @@ class api_base:
             except ObjectDoesNotExist:
                 pass
             try:
+                default = DefaultPlaylistFavourite.objects.get(Song=song)
+                dataset["default"] = True
+            except ObjectDoesNotExist:
+                pass
+            try:
                 user = User.objects.get(id=self.user_id)
                 Favourite.objects.get(Song=song, User=user)
                 dataset["favourite"] = True
@@ -325,6 +336,7 @@ class songs(api_base):
                 "length": None,
                 "queued": False,
                 "favourite": False,
+                "default": False,
             }
             if not item.Title is None:
                 dataset["title"] = item.Title
@@ -348,6 +360,7 @@ class songs(api_base):
         return result
 
     def getNextSong(self):
+        print "In GetNextSong"
         # commit transaction to force fresh queryset result
         try:
             transaction.enter_transaction_management()
@@ -365,11 +378,18 @@ class songs(api_base):
             data.delete()
         except ObjectDoesNotExist:
             try:
+                print "No queued song...."
                 song_instance = self.getRandomSongByPreferences()
                 self.addToHistory(song_instance, None)
             except ObjectDoesNotExist:
-                song_instance = Song.objects.order_by('?')[0:1].get()
-                self.addToHistory(song_instance, None)
+                try:
+                    print "No logged in user with favourite...."
+                    song_instance = self.getRandomSongByDefaultPlaylist()
+                    self.addToHistory(song_instance, None)
+                except ObjectDoesNotExist:
+                    print "Picking a random song"
+                    song_instance = Song.objects.order_by('?')[0:1].get()
+                    self.addToHistory(song_instance, None)
 
         # remove missing files
         if not os.path.exists(song_instance.Filename.encode('utf8')):
@@ -379,7 +399,7 @@ class songs(api_base):
         return song_instance
 
     def getRandomSongByPreferences(self):
-        artists = {}
+        songs = {}
 
         # get logged in users
         sessions = Session.objects.exclude(
@@ -392,33 +412,15 @@ class songs(api_base):
             user_id = data["_auth_user_id"]
 
             # get newest favourites
-            favourites = Favourite.objects.filter(User__id=user_id)[0:30]
+            favourites = Favourite.objects.filter(User__id=user_id)[0:1000]
             for favourite in favourites:
-                if not favourite.Song.Artist.id in artists:
-                    artists[favourite.Song.Artist.id] = 0
-                artists[favourite.Song.Artist.id]+= 1
-
-            # get last voted songs
-            votes = History.objects.filter(User__id=user_id)[0:30]
-            for vote in votes:
-                if not vote.Song.Artist.id in artists:
-                    artists[vote.Song.Artist.id] = 0
-                artists[vote.Song.Artist.id]+= 1
+                if not favourite.Song.id in songs:
+                    songs[favourite.Song.id] = 0
+                songs[favourite.Song.id]+= 1
 
         # nothing played and no favourites
-        if not len(artists):
+        if not len(songs):
             raise ObjectDoesNotExist
-
-        # calculate top artists
-        from operator import itemgetter
-        sorted_artists = sorted(
-            artists.iteritems(),
-            key=itemgetter(1),
-            reverse=True
-        )[0:30]
-        artists = []
-        for key in range(len(sorted_artists)):
-            artists.append(sorted_artists[key][0])
 
         # get the 50 last played songs
         history = History.objects.all()[0:50]
@@ -430,7 +432,34 @@ class songs(api_base):
         song_instance = Song.objects.exclude(
             id__in=last_played
         ).filter(
-            Artist__id__in=artists
+            id__in=songs
+        ).order_by('?')[0:1].get()
+        return song_instance
+
+    def getRandomSongByDefaultPlaylist(self):
+        songs = {}
+
+        # get appropriate default playlists
+        for favourite in DefaultPlaylistFavourite.objects.all():
+            if not favourite.Song.id in songs:
+                songs[favourite.Song.id] = 0
+            songs[favourite.Song.id]+= 1
+
+        # nothing to play
+        if not len(songs):
+            raise ObjectDoesNotExist
+
+        # get the 50 last played songs
+        history = History.objects.all()[0:50]
+        last_played = []
+        for item in history:
+            last_played.append(item.Song.id)
+
+        # find a song not played recently
+        song_instance = Song.objects.exclude(
+            id__in=last_played
+        ).filter(
+            id__in=songs
         ).order_by('?')[0:1].get()
         return song_instance
 
@@ -504,6 +533,7 @@ class history(api_base):
                 },
                 "queued": False,
                 "favourite": False,
+                "default": False,
                 "created": formats.date_format(
                     item.Created, "DATETIME_FORMAT"
                 ),
@@ -663,6 +693,7 @@ class queue(api_base):
             },
             "queued": False,
             "favourite": False,
+            "default": False,
             "created": formats.date_format(item.Created, "DATETIME_FORMAT"),
             "votes": item.User.count(),
             "users": [],
@@ -777,6 +808,7 @@ class favourites(api_base):
             },
             "queued": False,
             "favourite": False,
+            "default": False,
             "created": formats.date_format(item.Created, "DATETIME_FORMAT"),
         }
 
@@ -822,6 +854,61 @@ class favourites(api_base):
         return {
             "id": song_id,
         }
+
+class defaultfavourites(api_base):
+    order_by_fields = {
+        "created": "Created",
+    }
+    order_by_default = {
+        "created": "-Created",
+    }
+
+    def index(self, page=1):
+        object_list = DefaultPlaylistFavourite.objects.all()
+        object_list = self.source_set_order(object_list)
+
+        # prepare result
+        result = self.get_default_result("defaultfavourites", page)
+
+        # get data
+        paginator = Paginator(object_list, self.count)
+        try:
+            page_obj = paginator.page(page)
+        except InvalidPage:
+            return result
+
+        result = self.result_set_order(result)
+        result["hasNextPage"] = page_obj.has_next()
+        for item in page_obj.object_list:
+            result["itemList"].append(self.get(item.Song.id))
+
+        return result
+
+    def add(self, song_id):
+        song = Song.objects.get(id=song_id)
+        playlist = DefaultPlaylist.objects.get(id=1)
+        
+        favourite = DefaultPlaylistFavourite(
+            Song=song,
+            DefaultPlaylist=playlist
+        )
+        favourite.save()
+
+        return song_id
+
+    def remove(self, song_id):
+        song = Song.objects.get(id=song_id)
+        playlist = DefaultPlaylist.objects.get(id=1)
+        
+        DefaultPlaylistFavourite.objects.get(
+            Song=song,
+            DefaultPlaylist=playlist
+        ).delete()
+
+        return {
+            "id": song_id,
+        }
+
 
 
 class artists(api_base):

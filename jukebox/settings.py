@@ -4,7 +4,7 @@ import sys
 
 BASE_DIR = os.path.normpath(os.path.dirname(__file__))
 
-DEBUG = False
+DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
 ADMINS = ()

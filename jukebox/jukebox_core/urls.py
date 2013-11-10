@@ -20,6 +20,11 @@ urlpatterns = patterns("",
         name="jukebox_api_songs_current"
     ),
     url(
+        r"^api/v1/songs/next",
+        views.songs_next.as_view(),
+        name="jukebox_api_songs_next"
+    ),
+    url(
         r"^api/v1/artists$",
         views.artists.as_view(),
         name="jukebox_api_artists"
@@ -59,7 +64,16 @@ urlpatterns = patterns("",
         views.favourites_item.as_view(),
         name="jukebox_api_favourites_item"
     ),
-
+    url(
+        r"^api/v1/defaultfavourites$",
+        views.defaultfavourites.as_view(),
+        name="jukebox_api_defaultfavourites"
+    ),
+    url(
+        r"^api/v1/defaultfavourites/(?P<song_id>[0-9]+)$",
+        views.defaultfavourites_item.as_view(),
+        name="jukebox_api_defaultfavourites_item"
+    ),
     url(
         r"^api/v1/queue$",
         views.queue.as_view(),

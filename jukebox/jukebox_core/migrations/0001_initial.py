@@ -117,9 +117,6 @@ class Migration(SchemaMigration):
         # Removing M2M table for field User on 'Queue'
         db.delete_table('jukebox_core_queue_User')
 
-        # Deleting model 'Favourite'
-        db.delete_table('jukebox_core_favourite')
-
         # Deleting model 'History'
         db.delete_table('jukebox_core_history')
 
