@@ -3,6 +3,7 @@ from jukebox.jukebox_core.models import Artist, Album, Song, Genre
 from mutagen.easyid3 import EasyID3
 from mutagen.mp3 import MP3, HeaderNotFoundError
 from mutagen.id3 import ID3NoHeaderError
+import os
 
 
 class FileIndexer:
@@ -77,3 +78,12 @@ class FileIndexer:
         if not data:
             return False
         return True
+    
+    def RemoveMissingSongs(self):
+        data = Song.objects.all()
+        if not data:
+            return False
+        for song in data:
+            if not os.path.isfile(song.Filename):
+                print 'Removing ' + song.Filename
+                song.delete()

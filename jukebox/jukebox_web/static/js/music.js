@@ -132,6 +132,11 @@ Music = {
             }
         });
 
+        $(".skipButton").bind("click", function() {
+            Music.skipCurrentSong();
+            return false;
+        });
+
         $("#main table.list td.filter").live("click", function() {
             var value = $(this).attr("data-value");
             if ($(this).hasClass("filter_artist")) {
@@ -227,12 +232,21 @@ Music = {
                 data: {
                     "id": $(this).attr("data-id")
                 },
-                success: function(data) {
+				beforeSend: function(jqXHR, settings) {
+					$("body").addClass("loading"); 
+				},
+				error: function (xhr, ajaxOptions, thrownError) {
+					$("body").removeClass("loading"); 
+					$("#main").html(thrownError);
+				},
+				success: function(data) {
+					$("body").removeClass("loading"); 
                     var item = $("img.queue_add[data-id=" + data.id + "]");
                     item.attr("src", "/static/img/queue_active.png");
                     item.removeClass("queue_add");
                     item.addClass("queue_remove");
-                    item.attr("id", item.attr("id").replace(/add/, "remove"));
+					if(item.attr("id")!=undefined)
+						item.attr("id", item.attr("id").replace(/add/, "remove"));
                     item.attr("alt", gettext("Revoke vote"));
                     item.attr("title", gettext("Revoke vote"));
                     item.closest("tr").find(".voteCount").html(data.count);
@@ -275,7 +289,15 @@ Music = {
             $.ajax({
                 url: "/api/v1/queue/" + $(this).attr("data-id"),
                 type: "DELETE",
-                success: function(data) {
+				beforeSend: function(jqXHR, settings) {
+					$("body").addClass("loading"); 
+				},
+				error: function (xhr, ajaxOptions, thrownError) {
+					$("body").removeClass("loading"); 
+					$("#main").html(thrownError);
+				},
+				success: function(data) {
+					$("body").removeClass("loading"); 
                     success(data);
                 }
             });
@@ -289,7 +311,15 @@ Music = {
                 data: {
                     "id": $(this).attr("data-id")
                 },
-                success: function(data) {
+				beforeSend: function(jqXHR, settings) {
+					$("body").addClass("loading"); 
+				},
+				error: function (xhr, ajaxOptions, thrownError) {
+					$("body").removeClass("loading"); 
+					$("#main").html(thrownError);
+				},
+				success: function(data) {
+					$("body").removeClass("loading"); 
                     var item = $("img.favourite_add[data-id=" + data.id + "]");
                     item.attr("src", "/static/img/favourite_active.png");
                     item.removeClass("favourite_add");
@@ -325,7 +355,15 @@ Music = {
             $.ajax({
                 url: "/api/v1/favourites/" + $(this).attr("data-id"),
                 type: "DELETE",
-                success: function(data) {
+				beforeSend: function(jqXHR, settings) {
+					$("body").addClass("loading"); 
+				},
+				error: function (xhr, ajaxOptions, thrownError) {
+					$("body").removeClass("loading"); 
+					$("#main").html(thrownError);
+				},
+				success: function(data) {
+					$("body").removeClass("loading"); 
                     success(data);
                 }
             });
@@ -340,7 +378,15 @@ Music = {
                 data: {
                     "id": $(this).attr("data-id")
                 },
-                success: function(data) {
+				beforeSend: function(jqXHR, settings) {
+					$("body").addClass("loading"); 
+				},
+				error: function (xhr, ajaxOptions, thrownError) {
+					$("body").removeClass("loading"); 
+					$("#main").html(thrownError);
+				},
+				success: function(data) {
+					$("body").removeClass("loading"); 
                     var item = $("img.default_add[data-id=" + data.id + "]");
                     item.attr("src", "/static/img/default_active.png");
                     item.removeClass("default_add");
@@ -376,7 +422,15 @@ Music = {
             $.ajax({
                 url: "/api/v1/defaultfavourites/" + $(this).attr("data-id"),
                 type: "DELETE",
-                success: function(data) {
+				beforeSend: function(jqXHR, settings) {
+					$("body").addClass("loading"); 
+				},
+				error: function (xhr, ajaxOptions, thrownError) {
+					$("body").removeClass("loading"); 
+					$("#main").html(thrownError);
+				},
+				success: function(data) {
+					$("body").removeClass("loading"); 
                     success(data);
                 }
             });
@@ -422,9 +476,33 @@ Music = {
         });
     },
 
+    skipCurrentSong: function() {
+         $.ajax({
+            url: "/api/v1/songs/skip",
+			beforeSend: function(jqXHR, settings) {
+				$("body").addClass("loading"); 
+			},
+			error: function (xhr, ajaxOptions, thrownError) {
+				$("body").removeClass("loading"); 
+				$('#currentSong strong').show();
+				$('#currentSong span.songTitle').html(thrownError);
+				setTimeout("Music.getCurrentSong()", 10000);
+			},
+            success: function(data) {
+				$("body").removeClass("loading"); 
+				setTimeout("Music.getCurrentSong()", 5000);
+            }
+        });
+    },
+
     getCurrentSong: function() {
          $.ajax({
             url: "/api/v1/songs/current",
+			error: function (xhr, ajaxOptions, thrownError) {
+				$('#currentSong strong').show();
+				$('#currentSong span.songTitle').html(thrownError);
+				setTimeout("Music.getCurrentSong()", 10000);
+			},
             success: function(data) {
                 if ("id" in data) {
                     $('#currentSong strong').show();
@@ -492,6 +570,7 @@ Music = {
     },
 
     loadList: function(url) {
+		$("#main").html("Loading...");
         Music.pageNum = 1;
         Music.hasNextPage = false;
         Music.searchOptions = {};
@@ -504,9 +583,19 @@ Music = {
         $.ajax({
             url: url,
             data: Music.options,
+			beforeSend: function(jqXHR, settings) {
+				$("body").addClass("loading"); 
+			},
+			error: function (xhr, ajaxOptions, thrownError) {
+				$("body").removeClass("loading"); 
+				$("#main").html(thrownError);
+			},
             success: function(data) {
+				$("body").removeClass("loading"); 
                 $(window).unbind("scroll");
                 $(window).scrollTop(0);
+				
+				$(".skipButton").toggle(data.showDefaultPlaylist);
 
                 Music.hasNextPage = data.hasNextPage;
                 if (data.itemList.length > 0) {
@@ -767,6 +856,14 @@ Music = {
                     else {
                         html+= "<img src=\"/static/img/favourite.png\" class=\"favourite_add\" data-id=\"" + item.id + "\" alt=\"" + gettext("Add to favourites") + "\" title=\"" + gettext("Add to favourites") + "\" />";
                     }
+					if(showDefaultPlaylist){
+                    if (item.default) {
+                        html+= "<img src=\"/static/img/default_active.png\" class=\"default_remove\" data-id=\"" + item.id + "\" alt=\"" + gettext("Remove from default playlist") + "\" title=\"" + gettext("Remove from default playlist") + "\" />";
+                    }
+                    else {
+                        html+= "<img src=\"/static/img/default.png\" class=\"default_add\" data-id=\"" + item.id + "\" alt=\"" + gettext("Add to default playlist") + "\" title=\"" + gettext("Add to default playlist") + "\" />";
+                    }
+					}
                     html+= "</td>";
 
                     // title

@@ -37,6 +37,7 @@
                 <br />
                 <span class="songTitle"></span>
                 <span class="timeRemaining"></span>
+				<img class="skipButton" style="display:none" border="0" width="20px" height="20px" src="./static/img/skip.png" />
             </div>
         </div>
         <div id="content">
@@ -162,6 +163,7 @@
         <div id="csrf_token">
             {% csrf_token %}
         </div>
+		<div class="modal"></div>
         <script type="text/javascript" src="/static/js/jquery-1.7.min.js"></script>
         <script type="text/javascript" src="{% url django.views.i18n.javascript_catalog %}"></script>
         <script type="text/javascript" src="/static/js/music.js"></script>

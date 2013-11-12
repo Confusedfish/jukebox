@@ -39,3 +39,4 @@ class Command(BaseCommand):
                 if verbosity >= 2:
                     print "Indexing file " + filename
                 indexer.index(filename)
+        indexer.RemoveMissingSongs()

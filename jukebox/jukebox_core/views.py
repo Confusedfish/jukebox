@@ -290,9 +290,13 @@ class history(JukeboxAPIView):
                 history_api.set_count(form.cleaned_data["count"])
             if not form.cleaned_data["page"] is None:
                 page = form.cleaned_data["page"]
+        response = history_api.index(page)
+        if request.user.is_authenticated():
+            if request.user.groups.filter(name="Default Playlist Managers").exists():
+                response["CanManageDefault"] = True
 
         return Response(
-            data=history_api.index(page)
+            data=response
         )
 
 
