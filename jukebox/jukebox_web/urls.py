@@ -12,7 +12,8 @@ js_info_dict = {
 
 urlpatterns = patterns("",
     url(r"^$", views.index, name="jukebox_web_index"),
-    url(r"^login$", views.login, name="jukebox_web_login"),
+    url(r"^login$", views.login_page, name="jukebox_web_login"),
+    url(r"^login/guest", views.login_guest, name="jukebox_web_login_guest"),
     url(r"^login/error$", views.login_error, name="jukebox_web_login_error"),
     url(
         r"^language/set/(?P<language>[a-z]{2})",

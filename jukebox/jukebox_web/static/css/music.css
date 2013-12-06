@@ -274,6 +274,7 @@ span.searchreset {
     position: relative;
     text-align: left;
     margin: 12px 120px 0 680px;
+	min-width: 150px;
 }
 
 #currentSong strong {
@@ -337,9 +338,8 @@ span.searchreset {
 }
 
 #sidebar {
-    width: 180px;
+    width: 140px;
     margin-right: 10px;
-    position: fixed;
     top: 76px;
     left: 0;
     z-index: 350;
@@ -369,7 +369,6 @@ span.searchreset {
 }
 
 #main_spacer {
-    position: fixed;
     top: 61px;
     left: 250px;
     right: 30px;
@@ -382,7 +381,7 @@ span.searchreset {
 #main {
     position: absolute;
     top: 76px;
-    left: 200px;
+    left: 150px;
     right: 30px;
     padding-bottom: 15px;
 }
@@ -478,7 +477,6 @@ span.searchreset {
     font-size: 9pt;
     background-color: #F5F5F5;
     border-bottom: 1px solid #E5E5E5;
-    padding:  5px 0 5px 15px;
     overflow: hidden;
 }
 
@@ -500,7 +498,7 @@ span.searchreset {
 }
 
 #main table.list td img {
-    margin-right: 10px;
+    padding: 10px;
     cursor: pointer;
 }
 

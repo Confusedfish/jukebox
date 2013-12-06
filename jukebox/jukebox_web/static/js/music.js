@@ -463,8 +463,8 @@ Music = {
 
         Music.getCurrentSong();
         Music.ping();
-        Music.loadList("/api/v1/queue");
-        Music.setActiveMenu($("#sidebar ul li a.loadQueue"));
+        Music.loadList("/api/v1/artists");
+        Music.setActiveMenu($("#sidebar ul li a.loadArtists"));
     },
 
     ping: function() {
@@ -777,7 +777,8 @@ Music = {
 
     renderData: function(data) {
         var html = "";
-		var showDefaultPlaylist = data.CanManageDefault;
+        var showDefaultPlaylist = data.CanManageDefault;
+        var showFave = data.CanFave;
         $.each(data.itemList, function(index, item) {
             switch (data.type) {
                 case "queue":
@@ -789,11 +790,12 @@ Music = {
                     else {
                         html+= "<img src=\"/static/img/queue.png\" class=\"queue_add\" data-id=\"" + item.id + "\" alt=\"" + gettext("Support vote") + "\" title=\"" + gettext("Support vote") + "\" />";
                     }
-                    if (item.favourite) {
-                        html+= "<img src=\"/static/img/favourite_active.png\" class=\"favourite_remove\" data-id=\"" + item.id + "\" alt=\"" + gettext("Remove from favourites") + "\" title=\"" + gettext("Remove from favourites") + "\" />";
-                    }
-                    else {
-                        html+= "<img src=\"/static/img/favourite.png\" class=\"favourite_add\" data-id=\"" + item.id + "\" alt=\"" + gettext("Add to favourites") + "\" title=\"" + gettext("Add to favourites") + "\" />";
+                    if (showFave) {
+                        if (item.favourite) {
+                            html += "<img src=\"/static/img/favourite_active.png\" class=\"favourite_remove\" data-id=\"" + item.id + "\" alt=\"" + gettext("Remove from favourites") + "\" title=\"" + gettext("Remove from favourites") + "\" />";
+                        } else {
+                            html += "<img src=\"/static/img/favourite.png\" class=\"favourite_add\" data-id=\"" + item.id + "\" alt=\"" + gettext("Add to favourites") + "\" title=\"" + gettext("Add to favourites") + "\" />";
+                        }
                     }
                     html+= "</td>";
 
@@ -850,13 +852,14 @@ Music = {
                     else {
                         html+= "<img src=\"/static/img/queue.png\" class=\"queue_add\" data-id=\"" + item.id + "\" alt=\"" + gettext("Vote to play") + "\" title=\"" + gettext("Vote to play") + "\" />";
                     }
-                    if (item.favourite) {
-                        html+= "<img src=\"/static/img/favourite_active.png\" class=\"favourite_remove\" data-id=\"" + item.id + "\" alt=\"" + gettext("Remove from favourites") + "\" title=\"" + gettext("Remove from favourites") + "\" />";
+                    if (showFave) {
+                        if (item.favourite) {
+                            html += "<img src=\"/static/img/favourite_active.png\" class=\"favourite_remove\" data-id=\"" + item.id + "\" alt=\"" + gettext("Remove from favourites") + "\" title=\"" + gettext("Remove from favourites") + "\" />";
+                        } else {
+                            html += "<img src=\"/static/img/favourite.png\" class=\"favourite_add\" data-id=\"" + item.id + "\" alt=\"" + gettext("Add to favourites") + "\" title=\"" + gettext("Add to favourites") + "\" />";
+                        }
                     }
-                    else {
-                        html+= "<img src=\"/static/img/favourite.png\" class=\"favourite_add\" data-id=\"" + item.id + "\" alt=\"" + gettext("Add to favourites") + "\" title=\"" + gettext("Add to favourites") + "\" />";
-                    }
-					if(showDefaultPlaylist){
+                    if(showDefaultPlaylist){
                     if (item.default) {
                         html+= "<img src=\"/static/img/default_active.png\" class=\"default_remove\" data-id=\"" + item.id + "\" alt=\"" + gettext("Remove from default playlist") + "\" title=\"" + gettext("Remove from default playlist") + "\" />";
                     }
@@ -964,13 +967,14 @@ Music = {
                     else {
                         html+= "<img src=\"/static/img/queue.png\" class=\"queue_add\" data-id=\"" + item.id + "\" alt=\"" + gettext("Vote to play") + "\" title=\"" + gettext("Vote to play") + "\" />";
                     }
-                    if (item.favourite) {
-                        html+= "<img src=\"/static/img/favourite_active.png\" class=\"favourite_remove\" data-id=\"" + item.id + "\" alt=\"" + gettext("Remove from favourites") + "\" title=\"" + gettext("Remove from favourites") + "\" />";
+                    if (showFave) {
+                        if (item.favourite) {
+                            html += "<img src=\"/static/img/favourite_active.png\" class=\"favourite_remove\" data-id=\"" + item.id + "\" alt=\"" + gettext("Remove from favourites") + "\" title=\"" + gettext("Remove from favourites") + "\" />";
+                        } else {
+                            html += "<img src=\"/static/img/favourite.png\" class=\"favourite_add\" data-id=\"" + item.id + "\" alt=\"" + gettext("Add to favourites") + "\" title=\"" + gettext("Add to favourites") + "\" />";
+                        }
                     }
-                    else {
-                        html+= "<img src=\"/static/img/favourite.png\" class=\"favourite_add\" data-id=\"" + item.id + "\" alt=\"" + gettext("Add to favourites") + "\" title=\"" + gettext("Add to favourites") + "\" />";
-                    }
-					if(showDefaultPlaylist){
+                    if(showDefaultPlaylist){
                     if (item.default) {
                         html+= "<img src=\"/static/img/default_active.png\" class=\"default_remove\" data-id=\"" + item.id + "\" alt=\"" + gettext("Remove from default playlist") + "\" title=\"" + gettext("Remove from default playlist") + "\" />";
                     }

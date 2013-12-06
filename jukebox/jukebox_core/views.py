@@ -86,6 +86,8 @@ class songs(JukeboxAPIView):
         if request.user.is_authenticated():
             if request.user.groups.filter(name="Default Playlist Managers").exists():
                 result["CanManageDefault"] = True
+            if not request.user.username == "guest":
+                result["CanFave"] = True
         result["form"] = form.cleaned_data
         return Response(
             data=result
@@ -294,6 +296,8 @@ class history(JukeboxAPIView):
         if request.user.is_authenticated():
             if request.user.groups.filter(name="Default Playlist Managers").exists():
                 response["CanManageDefault"] = True
+            if not request.user.username == "guest":
+                response["CanFave"] = True
 
         return Response(
             data=response

@@ -8,6 +8,9 @@ from django.template import RequestContext
 from django.contrib.messages.api import get_messages
 from django.conf import settings
 from jukebox.jukebox_core.models import Song, Genre
+from django.contrib.auth import authenticate
+from django.contrib.auth import login
+from django.contrib.auth.models import AnonymousUser
 
 def index(request):
     if request.user.is_authenticated():
@@ -27,9 +30,9 @@ def index(request):
     else:
         return HttpResponseRedirect('login')
 
-def login(request):
+def login_page(request):
     if request.user.is_authenticated():
-        return HttpResponseRedirect('index')
+        return HttpResponseRedirect('/')
     else:
         return render_to_response(
             'login.html',
@@ -38,6 +41,13 @@ def login(request):
             },
             RequestContext(request)
         )
+
+def login_guest(request):
+    user = authenticate(username="guest", password="clear")
+    if user is not None:
+        if user.is_active:
+            login(request, user)
+    return HttpResponseRedirect('/')
 
 def login_error(request):
     messages = get_messages(request)
