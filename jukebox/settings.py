@@ -11,7 +11,7 @@ ADMINS = ()
 MANAGERS = ADMINS
 
 JUKEBOX_STORAGE_PATH = os.path.join(
-    os.path.expanduser('~'),
+    '/home/pi',
     '.jukebox',
 )
 if not os.path.exists(JUKEBOX_STORAGE_PATH):
@@ -24,7 +24,7 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': os.path.join(
-            JUKEBOX_STORAGE_PATH,
+            '/home/pi/.jukebox/db/',
             'db.sqlite'
         ),
     }

@@ -477,6 +477,8 @@ class songs(api_base):
         players = Player.objects.all()
         for player in players:
             try:
+                print 'Killing player'
+                print player.Pid
                 os.kill(player.Pid, SIGABRT)
             except OSError:
                 player.delete()
