@@ -6,7 +6,7 @@ from django.db.models import Count, Min, Q
 from django.contrib.sessions.models import Session
 from django.utils import formats
 import os, re, time
-from datetime import datetime
+import datetime
 from signal import SIGABRT
 from django.contrib.auth.models import User
 from models import Song, Artist, Album, Genre, Queue, Favourite, History, Player, DefaultPlaylist, DefaultPlaylistFavourite
@@ -382,12 +382,12 @@ class songs(api_base):
         except ObjectDoesNotExist:
             try:
                 print "No queued song...."
-                song_instance = self.getRandomSongByPreferences()
+                song_instance = self.getRandomSongByDefaultPlaylist()
                 self.addToHistory(song_instance, None)
             except ObjectDoesNotExist:
                 try:
-                    print "No logged in user with favourite...."
-                    song_instance = self.getRandomSongByDefaultPlaylist()
+                    print "No active playlist...."
+                    song_instance = self.getRandomSongByPreferences()
                     self.addToHistory(song_instance, None)
                 except ObjectDoesNotExist:
                     print "Picking a random song"
@@ -406,7 +406,7 @@ class songs(api_base):
 
         # get logged in users
         sessions = Session.objects.exclude(
-            expire_date__lt=datetime.today()
+            expire_date__lt=datetime.datetime.today()
         )
         for session in sessions.all():
             data = session.get_decoded()
@@ -443,10 +443,16 @@ class songs(api_base):
         songs = {}
 
         # get appropriate default playlists
-        for favourite in DefaultPlaylistFavourite.objects.all():
-            if not favourite.Song.id in songs:
-                songs[favourite.Song.id] = 0
-            songs[favourite.Song.id]+= 1
+        now = datetime.datetime.now()
+        today = now.weekday() + 1
+        time = (now.hour * 100) + now.minute
+        print 'Seeking default playlist for weekday ' + repr(today) + ' at ' + repr(time)
+        for playlist in DefaultPlaylist.objects.all():
+            if (playlist.Days & today) != 0 and playlist.StartTime < time and playlist.EndTime> time:
+                for favourite in DefaultPlaylistFavourite.objects.all().filter(DefaultPlaylist=playlist):
+                    if not favourite.Song.id in songs:
+                        songs[favourite.Song.id] = 0
+                    songs[favourite.Song.id]+= 1
 
         # nothing to play
         if not len(songs):
