@@ -199,8 +199,11 @@ class api_base:
             except ObjectDoesNotExist:
                 pass
             try:
-                default = DefaultPlaylistFavourite.objects.get(Song=song)
-                dataset["default"] = True
+                user = User.objects.get(id=self.user_id)
+                if user.groups.filter(name="Default Playlist Managers").exists():
+                    playlist = DefaultPlaylist.objects.get(Editing=True)
+                    default = DefaultPlaylistFavourite.objects.get(Song=song, DefaultPlaylist=playlist)
+                    dataset["default"] = True
             except ObjectDoesNotExist:
                 pass
             try:
@@ -888,7 +891,7 @@ class defaultfavourites(api_base):
 
     def add(self, song_id):
         song = Song.objects.get(id=song_id)
-        playlist = DefaultPlaylist.objects.get(id=1)
+        playlist = DefaultPlaylist.objects.get(Editing=True)
         
         favourite = DefaultPlaylistFavourite(
             Song=song,
@@ -900,7 +903,7 @@ class defaultfavourites(api_base):
 
     def remove(self, song_id):
         song = Song.objects.get(id=song_id)
-        playlist = DefaultPlaylist.objects.get(id=1)
+        playlist = DefaultPlaylist.objects.get(Editing=True)
         
         DefaultPlaylistFavourite.objects.get(
             Song=song,

@@ -75,6 +75,10 @@ class DefaultPlaylist(models.Model):
         return "%s" % self.Name
 
     Name = models.CharField(max_length=200)
+    Days = models.IntegerField()
+    StartTime = models.IntegerField()
+    EndTime = models.IntegerField()
+    Editing = models.BooleanField()
 	
 
 	
