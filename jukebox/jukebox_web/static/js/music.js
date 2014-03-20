@@ -241,6 +241,13 @@ Music = {
 				},
 				success: function(data) {
 					$("body").removeClass("loading"); 
+					
+					if(data.id<0)
+					{
+						alert("Maximum of 4 songs in the queue at a time");
+						return;
+					}
+					
                     var item = $("img.queue_add[data-id=" + data.id + "]");
                     item.attr("src", "/static/img/queue_active.png");
                     item.removeClass("queue_add");

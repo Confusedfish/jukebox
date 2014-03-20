@@ -733,6 +733,9 @@ class queue(api_base):
         return result
 
     def add(self, song_id):
+        queued = Queue.objects.count()
+        if queued>=4:
+            return -1
         song = Song.objects.get(id=song_id)
         user = User.objects.get(id=self.user_id)
 

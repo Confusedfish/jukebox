@@ -380,6 +380,12 @@ class queue(JukeboxAPIView):
 
         try:
             song_id = queue_api.add(self.request.POST["id"])
+            if song_id == -1:
+                return Response(
+                    status=status.HTTP_201_CREATED,
+                    data={
+                        'id': -1
+                    })
             return Response(
                 status=status.HTTP_201_CREATED,
                 data={
